@@ -44,8 +44,9 @@ foreach ($server in $servers)
 
 if ($readonlys)
 {
-    #install missing updates
-    #wait for AG to be healthy
+    # install missing updates for each Read_Only server
+    # wait for AG to be healthy
+    # When do we say that the installation has failed and that the AO group isnt comming back online?
     $Health = $false
     do {
         Start-Sleep -Seconds 30
@@ -65,12 +66,14 @@ if ($readonlys)
 
 if ($secondarys)
 {
-    #install missing updates
+    #install missing updates for each secondary server
     #wait for AG to be healthy
 }
 
 if ($primary)
 {
-    #install missing updates
+    #Do a failover from primary to secondary server
+    #install missing updates for the former Primary server
     #wait for AG to be healthy
+    #Fail over so that we are back to the way we where before the installation of patches
 }
