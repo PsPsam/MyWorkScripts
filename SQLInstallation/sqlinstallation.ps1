@@ -1,4 +1,4 @@
-﻿#requires -Version 3.0 -Modules ActiveDirectory, GroupPolicy, SqlServer
+﻿##requires -Version 3.0 -Modules ActiveDirectory, GroupPolicy, SqlServer
 
 Function Test-WSManCredSSP
 # Slår på så att man kan göra dubbelhopp i powershell skript
