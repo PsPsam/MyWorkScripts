@@ -184,8 +184,8 @@ Describe -Name 'Install-SQL' -Fixture {
 	)
 	$SqlCase = @(
 		@{
-			Sql   = 'Sodra'
-			TestName = 'Sodra'
+			Sql   = 'Default'
+			TestName = 'Default'
 		}
 		@{
 			Sql   = 'AO'
@@ -238,13 +238,13 @@ Describe -Name 'Install-SQL' -Fixture {
 			TestName = '2016'
 		}
 	)
-	$typeCase = @(
+	$EditionCase = @(
 		@{
-			Type   = 'Ent'
+			Edition   = 'Ent'
 			TestName = 'Ent'
 		}
 		@{
-			Type   = 'Std'
+			Edition   = 'Std'
 			TestName = 'Std'
 		}
 	)
@@ -271,14 +271,14 @@ Describe -Name 'Install-SQL' -Fixture {
 			(Get-Command Install-SQL).Parameters['Version'].Attributes.ValidValues -contains $version | Should be $true
 		}
 
-		$parameterInfo = (Get-Command Install-SQL).Parameters['type']
-		It -name 'Has ValidateSet for parameter Install-SQL for input type' -test {
+		$parameterInfo = (Get-Command Install-SQL).Parameters['Edition']
+		It -name 'Has ValidateSet for parameter Install-SQL for input Edition' -test {
 			$parameterInfo.Attributes.Where{$_ -is [ValidateSet]}.Count | Should be 1
 		}
 		
-		It -name 'ValidateSet contains option <TestName>' -TestCases $typeCase -test {
-			param($type)
-			(Get-Command Install-SQL).Parameters['Type'].Attributes.ValidValues -contains $type | Should be $true
+		It -name 'ValidateSet contains option <TestName>' -TestCases $EditionCase -test {
+			param($Edition)
+			(Get-Command Install-SQL).Parameters['Edition'].Attributes.ValidValues -contains $Edition | Should be $true
 		}
 
 		$parameterInfo = (Get-Command Install-SQL).Parameters['env']
