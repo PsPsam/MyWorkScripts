@@ -294,7 +294,7 @@ Describe -Name 'Install-SQL' -Fixture {
 			(Get-Command Install-SQL).Parameters['env'].Attributes.ValidValues -contains $env | Should be $true
 		}
 		
-		It -name 'When server is offline, it will throw an exception'	 -test {
+		It -name 'When server is offline, it will throw an exception' -test {
 			Mock -CommandName 'Test-Connection' -MockWith {$false}
 			{Install-SQL -server 'IAMOFFLINE'} | Should throw 'could not be reached'
 		}
@@ -306,6 +306,16 @@ Describe -Name 'Install-SQL' -Fixture {
 		Mock Test-WSManCredSSP {$true}
 		Mock Get-SQLBackupFolder {'\\sodra.com\sql-backup\test\IAMONLINE'} #
         Mock Set-SQLGroup {}
+		Mock Invoke-Gpupdate {}
+		Mock Test-WindowsFeature {} 
+		Mock Restart-Computer {} # How?
+		Mock Invoke-Command {}
+		Mock Set-SQLDisk {}
+		Mock New-PSSession {} # Should this be tested?
+		Mock Invoke-Command {} #Its allready mocked should you mock it several times? Or does it use the same mock? Should the scriptblock be tested if yes how?
+		Mock Remove-Pssession {}
+		Mock Set-location {}
+		
 		it 'When installing SQL get SQL backupfolder' {
 			$null = Install-Sql -server 'IAMONLINE'
 			$assMParams = @{

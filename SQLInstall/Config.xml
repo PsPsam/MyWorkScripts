@@ -1,0 +1,6 @@
+﻿<?xml version="1.0"?>
+<Settings>
+    <Domain>Sodra.Com</Domain>
+    <rootInstallfolder>\media\kits\microsoft\sql\ScriptInstall</rootInstallfolder>
+    <backupfolder>\sql-backup</backupfolder>
+</Settings>
