@@ -281,7 +281,21 @@ Function Test-SQL
 {
 	[CmdletBinding()]
 	param(
-		$ComputerName
+        [Parameter(Mandatory,HelpMessage = 'Name for the SQL Server',
+				ValueFromPipelineByPropertyName,
+		Position = 0)]
+		[ValidateScript({
+		    if (-not (Test-Connection -ComputerName $_ -Quiet -Count 1)) 
+		    {
+			    throw "The computer [$_] could not be reached."
+		    }
+		    else 
+		    {
+			    Write-Output -InputObject $true
+		    }
+		})]
+		[ValidateLength(1,15)]
+		[string]$ComputerName
 	)
 	$sqlservices = 'MSSQLSERVER,MSSQLServerOLAPService,MsDtsServer,MsDtsServer110,MsDtsServer120,MsDtsServer130,MsDtsServer140,ReportServer'
 	if (Get-Service -Name $sqlservices -ComputerName $ComputerName -ErrorAction SilentlyContinue) 

@@ -145,7 +145,10 @@ Describe -Name 'Set-SQLDisks' -Fixture {
 
 Describe -Name 'Test-SQL' -Fixture {
 	Context -Name 'Input' -Fixture {
-
+        $parameterInfo = (Get-Command Test-SQL).Parameters['Computername']
+		It -name 'Has ValidateSet for parameter Install-SQL for input Sql installationstyp' -test {
+			$parameterInfo.Attributes.Where{$_ -is [ValidateSet]}.Count | Should be 1
+		}
 	}
 	Context -Name 'Execution' -Fixture {
 
@@ -157,7 +160,7 @@ Describe -Name 'Test-SQL' -Fixture {
 
 Describe -Name 'Wait-SQLService' -Fixture {
 	Context -Name 'Input' -Fixture {
-
+        
 	}
 	Context -Name 'Execution' -Fixture {
 
