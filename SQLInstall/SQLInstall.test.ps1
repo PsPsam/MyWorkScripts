@@ -84,14 +84,59 @@ Describe -Name 'Test-WindowsFeature' -Fixture {
 	}
 
 	Context -Name 'Execution' -Fixture {
-		It -name 'When feature is installed and you want to install it' -test {
-			Mock -CommandName 'install-windowsfeature' -MockWith {
 
-			}
-		}
 	}
 	Context -Name 'Output' -Fixture {
+        # Test when installing Windows feature       
+		It -name 'When feature is installed and trying to install it; should output "SERVER has feature FEATURENAME Installed"' -test {
+            Mock Get-WindowsFeature { 
+                [PSCustomObject]@{Installed = $true} 
+            }
+			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER has feature FEATURENAME Installed'
+		}
 
+		It -name 'When feature is not installed and succesfully installs it should output "SERVER got feature FEATURENAME Installed"' -test {
+            Mock Get-WindowsFeature { 
+                [PSCustomObject]@{Installed = $false} 
+            }
+            Mock Install-WindowsFeature {
+                [PSCustomObject]@{Installed = $true} 
+            }
+
+			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER got feature FEATURENAME Installed'
+		}
+
+        It -name 'When feature is not installed and installation failes it should output "SERVER has feature FEATURENAME Installed"' -test {
+            Mock Get-WindowsFeature { 
+                [PSCustomObject]@{Installed = $false} 
+            }
+            Mock Install-WindowsFeature {
+                [PSCustomObject]@{Installed = $false} 
+            }
+			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER has feature FEATURENAME Installed'
+		}
+
+        # Test when uninstalling windows feature
+		It -name 'When feature is installed and trying to uninstall it; should output "ERVER got feature FEATURENAME removed"' -test {
+            Mock Get-WindowsFeature { 
+                [PSCustomObject]@{Installed = $true} 
+            }
+			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER got feature FEATURENAME removed'
+		}
+
+		It -name 'When feature is not installed and succesfully installs it should output "SERVER failed to remove feature FEATURENAME"' -test {
+            Mock Get-WindowsFeature { 
+                [PSCustomObject]@{Installed = $true} 
+            }
+			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER failed to remove feature FEATURENAME'
+		}
+
+        It -name 'When feature is not installed and installation failes it should output "SERVER does not have feature FEATURENAME Installed"' -test {
+            Mock Get-WindowsFeature { 
+                [PSCustomObject]@{Installed = $true} 
+            }
+			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER does not have feature FEATURENAME Installed'
+		}
 	}
 }
 

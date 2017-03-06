@@ -1,4 +1,4 @@
-﻿#requires -Version 3.0 -Modules ActiveDirectory, GroupPolicy, SqlServer
+﻿##requires -Version 3.0 -Modules ActiveDirectory, GroupPolicy, SqlServer
 
 Function Test-WSManCredSSP
 # Enable double hop for Powershell (Is there a better way?)
@@ -26,51 +26,47 @@ Function Test-WindowsFeature
 	)
 	if ($Action -eq 'Install') 
 	{
-		if ($feature = Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore) 
+		if ((Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore).installed) 
 		{
-			if ($feature.installed)
+
+			Write-Verbose -Message "$ComputerName has $Name installed"
+			Write-Output -InputObject "$ComputerName has feature $Name installed"
+		}
+		else 
+		{
+			Write-Verbose -Message "Installing $Name on $ComputerName"
+			try 
 			{
-				Write-Verbose -Message "$ComputerName has $Name installed"
-				Write-Output -InputObject "$ComputerName has feature $Name installed"
+				Install-WindowsFeature -ComputerName $ComputerName -Name $Name -Source $env:HOMEDRIVE\SXS
+				Write-Output -InputObject "$ComputerName got feature $Name installed"
 			}
-			else 
+			catch 
 			{
-				Write-Verbose -Message "Installing $Name on $ComputerName"
-				try 
-				{
-					Install-WindowsFeature -ComputerName $ComputerName -Name $Name -Source $env:HOMEDRIVE\SXS
-					Write-Output -InputObject "$ComputerName got feature $Name installed"
-				}
-				catch 
-				{
-					Write-Output -InputObject "$ComputerName failed to get feature $Name installed"
-				}
+				Write-Output -InputObject "$ComputerName failed to get feature $Name installed"
 			}
 		}
 	} # Install action done
 	elseif($Action -eq 'Uninstall') 
 	{
-		if ($feature = Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore) 
+		if ((Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore).installed)  
 		{
-			if ($feature.installed)
+			Write-Verbose -Message "$ComputerName has $Name installed, removing the feature"
+			Try 
 			{
-				Write-Verbose -Message "$ComputerName has $Name installed, removing the feature"
-				Try 
-				{
-					Uninstall-WindowsFeature -ComputerName $ComputerName -Name $Name -IncludeManagementTools
-					Write-Output -InputObject "$ComputerName got feature $Name removed"
-				}
-				catch 
-				{
-					Write-Output -InputObject "$ComputerName failed to remove feature $Name"
-				}
+				Uninstall-WindowsFeature -ComputerName $ComputerName -Name $Name -IncludeManagementTools
+				Write-Output -InputObject "$ComputerName got feature $Name removed"
 			}
-			else 
+			catch 
 			{
-				Write-Verbose -Message "$ComputerName does not have $Name installed"
-				Write-Output -InputObject "$ComputerName does not have $Name installed"
+				Write-Output -InputObject "$ComputerName failed to remove feature $Name"
 			}
 		}
+		else 
+		{
+			Write-Verbose -Message "$ComputerName does not have $Name installed"
+			Write-Output -InputObject "$ComputerName does not have $Name installed"
+		}
+		
 	} # Uninstall action done
 } #Function Test-WindowsFeature done
 
