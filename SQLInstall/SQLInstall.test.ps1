@@ -88,50 +88,53 @@ Describe -Name 'Test-WindowsFeature' -Fixture {
 	}
 	Context -Name 'Output' -Fixture {
         # Test when installing Windows feature       
-		It -name 'When feature is installed and trying to install it; should output "SERVER has feature FEATURENAME Installed"' -test {
+		It -name 'When installing a feature and its installed: ' -test {
             Mock Get-WindowsFeature { 
                 [PSCustomObject]@{Installed = $true} 
             }
 			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER has feature FEATURENAME Installed'
 		}
 
-		It -name 'When feature is not installed and succesfully installs it should output "SERVER got feature FEATURENAME Installed"' -test {
+        It -name 'When installing a feature and SXS folder does not exist: ' -test {
+            mock 
+        }
+		It -name 'When installing a feature and installed and succesfully: ' -test {
             Mock Get-WindowsFeature { 
                 [PSCustomObject]@{Installed = $false} 
             }
             Mock Install-WindowsFeature {
-                [PSCustomObject]@{Installed = $true} 
+                [PSCustomObject]@{Exitcode = 'Success'} 
             }
 
 			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER got feature FEATURENAME Installed'
 		}
 
-        It -name 'When feature is not installed and installation failes it should output "SERVER has feature FEATURENAME Installed"' -test {
+        It -name 'When installing a feature and installation failes: ' -test {
             Mock Get-WindowsFeature { 
                 [PSCustomObject]@{Installed = $false} 
             }
             Mock Install-WindowsFeature {
                 [PSCustomObject]@{Installed = $false} 
             }
-			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER has feature FEATURENAME Installed'
+			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be ' SERVER has feature FEATURENAME Installed'
 		}
 
         # Test when uninstalling windows feature
-		It -name 'When feature is installed and trying to uninstall it; should output "ERVER got feature FEATURENAME removed"' -test {
+		It -name 'When uninstalling a feature and its removed: ' -test {
             Mock Get-WindowsFeature { 
                 [PSCustomObject]@{Installed = $true} 
             }
 			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER got feature FEATURENAME removed'
 		}
 
-		It -name 'When feature is not installed and succesfully installs it should output "SERVER failed to remove feature FEATURENAME"' -test {
+		It -name 'When uninstalling a feature and it failes' -test {
             Mock Get-WindowsFeature { 
                 [PSCustomObject]@{Installed = $true} 
             }
 			Test-windowsfeature -ComputerName 'SERVER' -Name 'FEATURENAME' -Action 'INSTALL' | Should be 'SERVER failed to remove feature FEATURENAME'
 		}
 
-        It -name 'When feature is not installed and installation failes it should output "SERVER does not have feature FEATURENAME Installed"' -test {
+        It -name 'When uninstalling a feature and its not installed' -test {
             Mock Get-WindowsFeature { 
                 [PSCustomObject]@{Installed = $true} 
             }
@@ -141,14 +144,17 @@ Describe -Name 'Test-WindowsFeature' -Fixture {
 }
 
 Describe -Name 'Get-SQLBackupFolder' -Fixture {
+    #Should use testcase
 	Context -Name 'Input' -Fixture {
-
+        It -name 'Only allow a singel computer' {}
+        It -name 'Only allow the strings "Prod","Acc" and "Test" to be used for env' {}
+        It -name 'Should be a string with the base backupfolder' {}
 	}
 	Context -Name 'Execution' -Fixture {
-
+        
 	}
 	Context -Name 'Output' -Fixture {
-
+        it -name 'Should output the sql backupfolder for the server to use' {}
 	}
 }
 

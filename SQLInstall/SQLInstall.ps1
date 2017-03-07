@@ -37,8 +37,13 @@ Function Test-WindowsFeature
 			Write-Verbose -Message "Installing $Name on $ComputerName"
 			try 
 			{
-				Install-WindowsFeature -ComputerName $ComputerName -Name $Name -Source $env:HOMEDRIVE\SXS
-				Write-Output -InputObject "$ComputerName got feature $Name installed"
+                if (test-path $env:HOMEDRIVE\SXS) {
+				    Install-WindowsFeature -ComputerName $ComputerName -Name $Name -Source $env:HOMEDRIVE\SXS
+				    Write-Output -InputObject "$ComputerName got feature $Name installed"
+                }
+                else {
+                    Write-Output -InputObject "$ComputerName doesn't have SXS folder"
+                }
 			}
 			catch 
 			{
@@ -130,7 +135,9 @@ function Get-SQLBackupFolder
 				Write-Error -Message $_.Exception.Message
 			}
 		}
-	}  
+	}
+    
+    # I dont handle if I get an error in adding the computerobject to the group  
 	Write-Output -InputObject $backupfolder #Returns the created backupfolder to the main script
 } # Function Get-SQLBackupfolder done
 
