@@ -151,43 +151,47 @@ Describe -Name 'Get-SQLBackupFolder' -Fixture {
         It -name 'Should be a string with the base backupfolder' {}
 	}
 	Context -Name 'Execution' -Fixture {
-        
+        It -name 'Should add account to group Get-SQLBackupFolder' {}
 	}
 	Context -Name 'Output' -Fixture {
         it -name 'Should output the sql backupfolder for the server to use' {}
 	}
 }
 
-Describe -Name 'Test-WSManCredSSP' -Fixture {
-	Context -Name 'Input' -Fixture {
-
-	}
-	Context -Name 'Execution' -Fixture {
-
-	}
-	Context -Name 'Output' -Fixture {
-
-	}
-}
 
 Describe -Name 'Set-SQLGroup' -Fixture {
+    # Testcase
 	Context -Name 'Input' -Fixture {
-
+        It -name 'Parameter ComputerName: Only allow a singel computer' {}
+        It -name 'Only allow the strings "Prod","Acc" and "Test" to be used for env' {}
 	}
 	Context -Name 'Execution' -Fixture {
-
+        It -name 'Should add account to group Set-SQLGrop:' {}
 	}
 	Context -Name 'Output' -Fixture {
-
+        
 	}
 }
 
 Describe -Name 'Set-SQLDisks' -Fixture {
 	Context -Name 'Input' -Fixture {
-
+        It -name 'Parameter ComputerName: Only allow a singel computer' {}
+        It -name 'Parameter UserObj: Should Throw if not credential object' {}
+        It -name 'Parameter UserObj: Only allow credential object' {}
 	}
 	Context -Name 'Execution' -Fixture {
-
+        It -name 'Should create a cim session to the computer'
+        It -name 'Should get disk through the cimsession that is online: Ends' {}
+        # How to test a long chain of piping 
+        # On done on the cim session
+        It 'Should get disk that is offline and set them online' {}
+        It 'Should get disk that is readonly and set them readwrite'{}
+        It 'Should get disk that is raw and create partition and format the disk' {}
+        It 'Should set partition on disk 1'{}
+        It 'Should set partition on disk 2'{}
+        It 'Should set partition on disk 3'{}
+        It 'Should throw if any error setting up disk on computer:' {}
+        It 'Should remove cim session' {}
 	}
 	Context -Name 'Output' -Fixture {
 

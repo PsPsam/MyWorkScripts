@@ -207,6 +207,8 @@ function Set-SQLGroup
 	}
 } # Function Set-SQLGroups done
 
+
+# Consider rewriting so that its more flexible
 Function Set-SQLDisk
 {
 	[CmdletBinding( SupportsShouldProcess)]
@@ -217,18 +219,20 @@ Function Set-SQLDisk
 		
         [ValidateScript({
             if ($_ -is [System.Management.Automation.PSCredential]) {
-            $True
+            	$True
             }
             elseif ($_ -is [string]) {
-            $Script:Credential=Get-Credential -Credential $_
-            $True
+				$Script:Credential=Get-Credential -Credential $_
+				$True
             }
             else {
-            Write-Error "You passed an unexpected object type for the credential."
+            	Throw "You passed an unexpected object type for the credential."
             }
         })]
         [object]$userobj #  (Is this the right way)?
 	)
+
+    # Have them hardcoded.
 	$T = 'T' # Tempdb Disk
 	$H = 'H' # Log disk
 	$G = 'G' # Data disk
@@ -239,15 +243,9 @@ Function Set-SQLDisk
 		try
 		{
             Write-verbose -Message 'Setting up disk'
-		    Get-Disk -CimSession $cim |
-			Where-Object -Property isoffline |
-			Set-Disk -CimSession $cim -IsOffline:$false 
-			Get-Disk -CimSession $cim |
-			Where-Object -Property IsReadOnly |
-			Set-Disk -CimSession $cim -IsReadOnly:$false
-			Get-Disk -CimSession $cim |
-			Where-Object -Property partitionstyle -EQ -Value 'raw' |
-			Initialize-Disk -CimSession $cim -PartitionStyle GPT -PassThru |
+		    Get-Disk -CimSession $cim | Where-Object -Property isoffline | Set-Disk -CimSession $cim -IsOffline:$false 
+			Get-Disk -CimSession $cim | Where-Object -Property IsReadOnly | Set-Disk -CimSession $cim -IsReadOnly:$false
+			Get-Disk -CimSession $cim |	Where-Object -Property partitionstyle -EQ -Value 'raw' |		Initialize-Disk -CimSession $cim -PartitionStyle GPT -PassThru |
 			New-Partition -CimSession $cim -UseMaximumSize |	
 			Format-Volume -CimSession $cim -FileSystem NTFS -AllocationUnitSize 65536 -Confirm:$false
 
@@ -290,7 +288,7 @@ Function Test-SQL
 		[ValidateScript({
 		    if (-not (Test-Connection -ComputerName $_ -Quiet -Count 1)) 
 		    {
-			    throw "The computer [$_] could not be reached."
+			    throw "The computer $_ could not be reached."
 		    }
 		    else 
 		    {
@@ -338,7 +336,7 @@ function Install-SQL
 		[ValidateScript({
 		    if (-not (Test-Connection -ComputerName $_ -Quiet -Count 1)) 
 		    {
-			    throw "The computer [$_] could not be reached."
+			    throw "The computer $_ could not be reached."
 		    }
 		    else 
 		    {
