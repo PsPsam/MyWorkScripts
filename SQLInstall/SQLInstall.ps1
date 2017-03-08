@@ -144,7 +144,7 @@ function Get-SQLBackupFolder
 
 function Set-SQLGroup
 {
-	[CmdletBinding( SupportsShouldProcess)]
+	[CmdletBinding()]
 	param(
 		# Computername
 		[Parameter(Mandatory,
