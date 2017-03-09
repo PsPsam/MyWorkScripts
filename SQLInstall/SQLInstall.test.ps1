@@ -198,6 +198,19 @@ Describe -Name 'Set-SQLDisks' -Fixture {
 	}
 }
 
+Describe -Name 'Wait-SQLService' -Fixture {
+	Context -Name 'Input' -Fixture {
+        It -name 'Parameter ComputerName: Only allow a singel computer' {}
+	}
+	Context -Name 'Execution' -Fixture {
+        It 'Should sleep for 5 seconds' {}
+        It 'Should get status of sqlservice' {}
+	}
+	Context -Name 'Output' -Fixture {
+
+	}
+}
+
 Describe -Name 'Test-SQL' -Fixture {
 	Context -Name 'Input' -Fixture {
         $parameterInfo = (Get-Command Test-SQL).Parameters['Computername']
@@ -206,22 +219,11 @@ Describe -Name 'Test-SQL' -Fixture {
 		}
 	}
 	Context -Name 'Execution' -Fixture {
-
+        It 'Should execute get-service' {}
 	}
 	Context -Name 'Output' -Fixture {
-
-	}
-}
-
-Describe -Name 'Wait-SQLService' -Fixture {
-	Context -Name 'Input' -Fixture {
-        
-	}
-	Context -Name 'Execution' -Fixture {
-
-	}
-	Context -Name 'Output' -Fixture {
-
+        It 'Should return true if any sql services exists' {}
+        It 'Should return false if no sql services is installed' {}
 	}
 }
 
