@@ -94,10 +94,17 @@ Describe -Name 'Test-WindowsFeature' -Tag 'Test-WindowsFeature' {
 		}
 	}
 
+<<<<<<< HEAD
+	Context -Name 'Execution' -Fixture {
+
+	}
+	Context -Name 'Output' -Fixture {
+=======
 	Context -Name 'Execution'  {
 
 	}
 	Context -Name 'Output'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         # Test when installing Windows feature       
 		It -name 'When installing a feature and its installed: ' -test {
             Mock Get-WindowsFeature { 
@@ -154,22 +161,47 @@ Describe -Name 'Test-WindowsFeature' -Tag 'Test-WindowsFeature' {
 	}
 }
 
+<<<<<<< HEAD
+Describe -Name 'Get-SQLBackupFolder' -Fixture {
+    #Should use testcase
+	Context -Name 'Input' -Fixture {
+=======
 Describe -Name 'Get-SQLBackupFolder' -Tag 'Get-SQLBackupFolder' {
     #Should use testcase
 	Context -Name 'Input'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It -name 'Only allow a singel computer' {}
         It -name 'Only allow the strings "Prod","Acc" and "Test" to be used for env' {}
         It -name 'Should be a string with the base backupfolder' {}
 	}
+<<<<<<< HEAD
+	Context -Name 'Execution' -Fixture {
+        It -name 'Should add account to group Get-SQLBackupFolder' {}
+	}
+	Context -Name 'Output' -Fixture {
+=======
 	Context -Name 'Execution'  {
         It -name 'Should add account to group Get-SQLBackupFolder' {}
 	}
 	Context -Name 'Output'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         it -name 'Should output the sql backupfolder for the server to use' {}
 	}
 }
 
 
+<<<<<<< HEAD
+Describe -Name 'Set-SQLGroup' -Fixture {
+    # Testcase
+	Context -Name 'Input' -Fixture {
+        It -name 'Parameter ComputerName: Only allow a singel computer' {}
+        It -name 'Only allow the strings "Prod","Acc" and "Test" to be used for env' {}
+	}
+	Context -Name 'Execution' -Fixture {
+        It -name 'Should add account to group Set-SQLGrop:' {}
+	}
+	Context -Name 'Output' -Fixture {
+=======
 Describe -Name 'Set-SQLGroup' -Tag 'Set-SQLGroup' {
     # Testcase
 	Context -Name 'Input'  {
@@ -180,17 +212,27 @@ Describe -Name 'Set-SQLGroup' -Tag 'Set-SQLGroup' {
         It -name 'Should add account to group Set-SQLGrop:' {}
 	}
 	Context -Name 'Output'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         
 	}
 }
 
+<<<<<<< HEAD
+Describe -Name 'Set-SQLDisks' -Fixture {
+	Context -Name 'Input' -Fixture {
+=======
 Describe -Name 'Set-SQLDisks' -Tag 'Set-SQLDisks'{
 	Context -Name 'Input'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It -name 'Parameter ComputerName: Only allow a singel computer' {}
         It -name 'Parameter UserObj: Should Throw if not credential object' {}
         It -name 'Parameter UserObj: Only allow credential object' {}
 	}
+<<<<<<< HEAD
+	Context -Name 'Execution' -Fixture {
+=======
 	Context -Name 'Execution'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It -name 'Should create a cim session to the computer'
         It -name 'Should get disk through the cimsession that is online: Ends' {}
         # How to test a long chain of piping 
@@ -209,11 +251,19 @@ Describe -Name 'Set-SQLDisks' -Tag 'Set-SQLDisks'{
 	}
 }
 
+<<<<<<< HEAD
+Describe -Name 'Wait-SQLService' -Fixture {
+	Context -Name 'Input' -Fixture {
+        It -name 'Parameter ComputerName: Only allow a singel computer' {}
+	}
+	Context -Name 'Execution' -Fixture {
+=======
 Describe -Name 'Wait-SQLService' -Tag 'Wait-SQLService'{
 	Context -Name 'Input'  {
         It -name 'Parameter ComputerName: Only allow a singel computer' {}
 	}
 	Context -Name 'Execution'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It 'Should sleep for 5 seconds' {}
         It 'Should get status of sqlservice' {}
 	}
@@ -222,17 +272,29 @@ Describe -Name 'Wait-SQLService' -Tag 'Wait-SQLService'{
 	}
 }
 
+<<<<<<< HEAD
+Describe -Name 'Test-SQL' -Fixture {
+	Context -Name 'Input' -Fixture {
+=======
 Describe -Name 'Test-SQL' -Tag 'Test-SQ'{
 	Context -Name 'Input'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         $parameterInfo = (Get-Command Test-SQL).Parameters['Computername']
 		It -name 'Has ValidateSet for parameter Install-SQL for input Sql installationstyp' -test {
 			$parameterInfo.Attributes.Where{$_ -is [ValidateSet]}.Count | Should be 1
 		}
 	}
+<<<<<<< HEAD
+	Context -Name 'Execution' -Fixture {
+        It 'Should execute get-service' {}
+	}
+	Context -Name 'Output' -Fixture {
+=======
 	Context -Name 'Execution'  {
         It 'Should execute get-service' {}
 	}
 	Context -Name 'Output'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It 'Should return true if any sql services exists' {}
         It 'Should return false if no sql services is installed' {}
 	}
