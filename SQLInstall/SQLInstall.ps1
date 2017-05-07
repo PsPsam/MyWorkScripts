@@ -1,12 +1,21 @@
-﻿#requires -Version 3.0 -Modules ActiveDirectory, GroupPolicy, SqlServer
+﻿##requires -Version 3.0 -Modules ActiveDirectory, GroupPolicy, SqlServer
 
 Function Test-WSManCredSSP
 # Enable double hop for Powershell (Is there a better way?)
+
+# Todo
+# Should add domain as imput parameter
 {
 	if ((Get-Item  -Path WSMan:\localhost\Client\Auth\CredSSP).value -eq $false) 
 	{
 		#enabla credspp
-		Enable-WSManCredSSP -Role client -DelegateComputer *.sodra.com
+        try {
+		    Enable-WSManCredSSP -Role client -DelegateComputer *.Default.com -Force
+        }
+        catch {
+            Write-Error -Message $_.Exception.Message
+            Throw 'Enable-WSManCredSSP unsuccessfull'
+        }
 	}
 	else
 	{
@@ -26,51 +35,52 @@ Function Test-WindowsFeature
 	)
 	if ($Action -eq 'Install') 
 	{
-		if ($feature = Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore) 
+		if ((Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore).installed) 
 		{
-			if ($feature.installed)
+
+			Write-Verbose -Message "$ComputerName has $Name installed"
+			Write-Output -InputObject "$ComputerName has feature $Name installed"
+		}
+		else 
+		{
+			Write-Verbose -Message "Installing $Name on $ComputerName"
+			try 
 			{
-				Write-Verbose -Message "$ComputerName has $Name installed"
-				Write-Output -InputObject "$ComputerName has feature $Name installed"
+                if (test-path $env:HOMEDRIVE\SXS) {
+				    Install-WindowsFeature -ComputerName $ComputerName -Name $Name -Source $env:HOMEDRIVE\SXS
+				    Write-Output -InputObject "$ComputerName got feature $Name installed"
+                }
+                else {
+                    Write-Output -InputObject "$ComputerName doesn't have SXS folder"
+                }
 			}
-			else 
+			catch 
 			{
-				Write-Verbose -Message "Installing $Name on $ComputerName"
-				try 
-				{
-					Install-WindowsFeature -ComputerName $ComputerName -Name $Name -Source $env:HOMEDRIVE\SXS
-					Write-Output -InputObject "$ComputerName got feature $Name installed"
-				}
-				catch 
-				{
-					Write-Output -InputObject "$ComputerName failed to get feature $Name installed"
-				}
+				Write-Output -InputObject "$ComputerName failed to get feature $Name installed"
 			}
 		}
 	} # Install action done
 	elseif($Action -eq 'Uninstall') 
 	{
-		if ($feature = Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore) 
+		if ((Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore).installed)  
 		{
-			if ($feature.installed)
+			Write-Verbose -Message "$ComputerName has $Name installed, removing the feature"
+			Try 
 			{
-				Write-Verbose -Message "$ComputerName has $Name installed, removing the feature"
-				Try 
-				{
-					Uninstall-WindowsFeature -ComputerName $ComputerName -Name $Name -IncludeManagementTools
-					Write-Output -InputObject "$ComputerName got feature $Name removed"
-				}
-				catch 
-				{
-					Write-Output -InputObject "$ComputerName failed to remove feature $Name"
-				}
+				Uninstall-WindowsFeature -ComputerName $ComputerName -Name $Name -IncludeManagementTools
+				Write-Output -InputObject "$ComputerName got feature $Name removed"
 			}
-			else 
+			catch 
 			{
-				Write-Verbose -Message "$ComputerName does not have $Name installed"
-				Write-Output -InputObject "$ComputerName does not have $Name installed"
+				Write-Output -InputObject "$ComputerName failed to remove feature $Name"
 			}
 		}
+		else 
+		{
+			Write-Verbose -Message "$ComputerName does not have $Name installed"
+			Write-Output -InputObject "$ComputerName does not have $Name installed"
+		}
+		
 	} # Uninstall action done
 } #Function Test-WindowsFeature done
 
@@ -134,7 +144,9 @@ function Get-SQLBackupFolder
 				Write-Error -Message $_.Exception.Message
 			}
 		}
-	}  
+	}
+    
+    # I dont handle if I get an error in adding the computerobject to the group  
 	Write-Output -InputObject $backupfolder #Returns the created backupfolder to the main script
 } # Function Get-SQLBackupfolder done
 
@@ -189,7 +201,7 @@ function Set-SQLGroup
 			Add-ADGroupMember -Identity $SQLReporting -Members $ComputerName'$'
 			Add-ADGroupMember -Identity $SQLDatabase -Members $ComputerName'$'
 		}
-		'SODRA' 
+		'Default' 
 		{
 			Add-ADGroupMember -Identity $SQLDatabase -Members $ComputerName'$'
 		}
@@ -204,6 +216,8 @@ function Set-SQLGroup
 	}
 } # Function Set-SQLGroups done
 
+
+# Consider rewriting so that its more flexible
 Function Set-SQLDisk
 {
 	[CmdletBinding( SupportsShouldProcess)]
@@ -214,18 +228,20 @@ Function Set-SQLDisk
 		
         [ValidateScript({
             if ($_ -is [System.Management.Automation.PSCredential]) {
-            $True
+            	$True
             }
             elseif ($_ -is [string]) {
-            $Script:Credential=Get-Credential -Credential $_
-            $True
+				$Script:Credential=Get-Credential -Credential $_
+				$True
             }
             else {
-            Write-Error "You passed an unexpected object type for the credential."
+            	Throw "You passed an unexpected object type for the credential."
             }
         })]
         [object]$userobj #  (Is this the right way)?
 	)
+
+    # Have them hardcoded.
 	$T = 'T' # Tempdb Disk
 	$H = 'H' # Log disk
 	$G = 'G' # Data disk
@@ -236,15 +252,9 @@ Function Set-SQLDisk
 		try
 		{
             Write-verbose -Message 'Setting up disk'
-		    Get-Disk -CimSession $cim |
-			Where-Object -Property isoffline |
-			Set-Disk -CimSession $cim -IsOffline:$false 
-			Get-Disk -CimSession $cim |
-			Where-Object -Property IsReadOnly |
-			Set-Disk -CimSession $cim -IsReadOnly:$false
-			Get-Disk -CimSession $cim |
-			Where-Object -Property partitionstyle -EQ -Value 'raw' |
-			Initialize-Disk -CimSession $cim -PartitionStyle GPT -PassThru |
+		    Get-Disk -CimSession $cim | Where-Object -Property isoffline | Set-Disk -CimSession $cim -IsOffline:$false 
+			Get-Disk -CimSession $cim | Where-Object -Property IsReadOnly | Set-Disk -CimSession $cim -IsReadOnly:$false
+			Get-Disk -CimSession $cim |	Where-Object -Property partitionstyle -EQ -Value 'raw' |		Initialize-Disk -CimSession $cim -PartitionStyle GPT -PassThru |
 			New-Partition -CimSession $cim -UseMaximumSize |	
 			Format-Volume -CimSession $cim -FileSystem NTFS -AllocationUnitSize 65536 -Confirm:$false
 
@@ -281,7 +291,21 @@ Function Test-SQL
 {
 	[CmdletBinding()]
 	param(
-		$ComputerName
+        [Parameter(Mandatory,HelpMessage = 'Name for the SQL Server',
+				ValueFromPipelineByPropertyName,
+		Position = 0)]
+		[ValidateScript({
+		    if (-not (Test-Connection -ComputerName $_ -Quiet -Count 1)) 
+		    {
+			    throw "The computer $_ could not be reached."
+		    }
+		    else 
+		    {
+			    Write-Output -InputObject $true
+		    }
+		})]
+		[ValidateLength(1,15)]
+		[string]$ComputerName
 	)
 	$sqlservices = 'MSSQLSERVER,MSSQLServerOLAPService,MsDtsServer,MsDtsServer110,MsDtsServer120,MsDtsServer130,MsDtsServer140,ReportServer'
 	if (Get-Service -Name $sqlservices -ComputerName $ComputerName -ErrorAction SilentlyContinue) 
@@ -319,33 +343,37 @@ function Install-SQL
 				ValueFromPipelineByPropertyName,
 		Position = 0)]
 		[ValidateScript({
-					if (-not (Test-Connection -ComputerName $_ -Quiet -Count 1)) 
-					{
-						throw "The computer [$_] could not be reached."
-					}
-					else 
-					{
-						Write-Output -InputObject $true
-					}
+		    if (-not (Test-Connection -ComputerName $_ -Quiet -Count 1)) 
+		    {
+			    throw "The computer $_ could not be reached."
+		    }
+		    else 
+		    {
+			    Write-Output -InputObject $true
+		    }
 		})]
 		[ValidateLength(1,15)]
 		[String]$server,
 
-		# Miljö variable, Prod, Acc eller Test
+		# Environment variable, Prod, Acc eller Test (Alter as needed)
 		[Parameter(ValueFromPipelineByPropertyName,
 		Position = 1)]
 		[ValidateSet('Prod','Acc','Test')]
 		[String]$env = 'Test',
-		# Typ av installation: Sodra (default), AO (Always On), Latin, SSRS (reporting), SSASM (Multidimension), SSAST (Tabular), SSIS, SP (Sharepoint), SCOM
+
+		# Type of installation: Default (default), AO (Always On), Latin, SSRS (reporting), SSASM (Multidimension), SSAST (Tabular), SSIS, SP (Sharepoint), SCOM
+        # Each instllation type has its own ini file. 
 		[Parameter(ValueFromPipelineByPropertyName,
 		Position = 2)]
 		[ValidateSet('Default','AO','Latin','SSRS','SSASM','SSIS','SSAST','SP','SCOM')]
 		[String]$sql = 'Default',
-		# SQL Server Version 
+
+		# SQL Server Version (Alter as needed)
 		[Parameter(ValueFromPipelineByPropertyName,
 		Position = 3)]
 		[ValidateSet('2008','2012','2014','2016')]
 		[String]$version = '2016',
+
 		# SQL Server type (Ent (Enterprise), Std (Standard)) 
 		[Parameter(ValueFromPipelineByPropertyName,
 		Position = 4)]
@@ -359,31 +387,26 @@ function Install-SQL
 		{
 			Throw "$server has running SQL services"
 		}
-		$Drift = 'Drift'
-		$domain = 'sodra.com'		
-		$rootInstallfolder = "\\$domain\media\kits\microsoft\sql\ScriptInstall"
+        
+        # Defaults needs to change for the enviroment you are in.
+		$domain = 'domain.local'
+        $backupfolder = "\\$domain\backupfolder"
+		$rootInstallfolder = "\\$domain\Installfolder"
         $setupfolder = "$rootInstallfolder\$version\$edition"
-		$AO = 'AO'
-		$Acc = 'Acc'
-		$Prod = 'Prod'
-		$Test = 'Test'
-		$startpath = (Get-Location).path
-		$backupfolder = "\\$domain\sql-backup"
 
+        # Startpath of the script.
+		$startpath = (Get-Location).path
+		
 		Test-WSManCredSSP
 		Import-Module -Name SQLServer -DisableNameChecking
 	}
 
 	Process
 	{
-		
 		[System.Management.Automation.CredentialAttribute()]$credential = Get-Credential -UserName $env:USERDOMAIN\$env:username -Message 'Konto för installation av SQL server'
 
 		# Creating the backup folder structure
 		Write-Verbose -Message 'Setting Backupfolder'
-        Write-verbose -Message "domain: $domain"
-        Write-verbose -Message "rootInstallfolder: $rootInstallfolder"
-        Write-verbose -Message "backupfolder: $backupfolder"
 		$backupfolder = Get-SQLBackupFolder -ComputerName $server -env $env -backupfolder $backupfolder
  
 		# Adding the server to AD groups for rights and GPO:s
@@ -399,9 +422,9 @@ function Install-SQL
 		Test-WindowsFeature -ComputerName $server -Name 'NET-Framework-Core' -Action Install
 		Test-WindowsFeature -ComputerName $server -Name 'FS-SMB1' -Action Uninstall
 			
-		if ($sql -eq $AO) 
+		if ($sql -eq 'AO') 
 		{
-			Test-WindowsFeature -ComputerName $server -Name 'failover-clustering' -Action Install
+		    Test-WindowsFeature -ComputerName $server -Name 'failover-clustering' -Action Install
 		}
 
 		# Restart the computer and wait for powershell to be started
@@ -428,7 +451,7 @@ function Install-SQL
         
 		switch ($sql)
 		{
-			'Sodra'
+			'Default'
 			{
 				$configFileName = 'ConfigurationFile.ini'
 			}
@@ -502,12 +525,12 @@ function Install-SQL
 		Remove-PSSession -Session $session
         #Installation of SQL server Done
 
-		# Konfigurera SQL servern
+		# Configuration of the SQL servern
 
 		switch ($sql)
 		{
 			{
-				($_ -eq 'Sodra') -or 
+				($_ -eq 'Default') -or 
 				($_ -eq 'SSRS') -or 
 				($_ -eq 'AO') -or 
 				($_ -eq 'Latin') -or 
@@ -516,8 +539,9 @@ function Install-SQL
 				($_ -eq 'SCOM')
 			}
 			{
-				# Vänta på MSSQLSERVER starts
+				# Waits for the SQL server to start up
 				Wait-SQLService -ComputerName $server
+                
 				#					try 
 				#					{
 				#						# Skapa anslutningen till sql servern
@@ -526,7 +550,7 @@ function Install-SQL
 				#						# Traceflaggor som skall finnas på samtliga servrar
 				#						if ($version -ne '2016') 
 				#						{
-				#							Invoke-Sqlcmd -InputFile '\\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\enable traceflags startup.sql' -ServerInstance $server # Lägger in så att vissa traceflaggor alltid startas
+				#							Invoke-Sqlcmd -InputFile '$rootInstallfolder\SQL\enable traceflags startup.sql' -ServerInstance $server # Lägger in så att vissa traceflaggor alltid startas
 				#						}
 				#			               
 				#						# När frågor får gå parallellt   
@@ -548,38 +572,38 @@ function Install-SQL
 				#						Write-Output -InputObject 'Gick inte att sätta server configuration på sql server.'
 				#					}
 				#				
-				#					# Uppsättning av drift databas och maintinance skript   
-				#					Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\drift.sql -ServerInstance $server  # skapar Drift
-				#					Invoke-Sqlcmd -InputFile '\\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\who is active.sql' -ServerInstance $server -Database $Drift # Who is active
+				#					# Uppsättning av MgmtDB databas och maintinance skript   
+				#					Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\drift.sql -ServerInstance $server  # skapar Drift
+				#					Invoke-Sqlcmd -InputFile '$rootInstallfolder\SQL\who is active.sql' -ServerInstance $server -Database $Drift # Who is active
 				#			       
-				#					Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\sp_Blitz.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#					Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\sp_BlitzCache.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#					Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\sp_BlitzIndex.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#					Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\sp_BlitzTrace.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#					Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\sp_BlitzWho.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#					Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\sp_BlitzFirst.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#					Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\sp_foreachdb.sql -ServerInstance $server # the parameter -database can be omitted based on what your sql script does
+				#					Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\sp_Blitz.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#					Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\sp_BlitzCache.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#					Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\sp_BlitzIndex.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#					Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\sp_BlitzTrace.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#					Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\sp_BlitzWho.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#					Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\sp_BlitzFirst.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#					Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\sp_foreachdb.sql -ServerInstance $server # the parameter -database can be omitted based on what your sql script does
 				#			       
 				#			       
 				#					switch ($env)
 				#					{
-				#						$Prod 
+				#						'Prod' 
 				#						{
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\MaintenanceSolution.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\Jobb.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\Schema.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does      
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\MaintenanceSolution.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\Jobb.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\Schema.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does      
 				#						}
-				#						$Acc  
+				#						'Acc'  
 				#						{
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\MaintenanceSolution-Acc.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\Jobb-Acc.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\Schema-Acc.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does 
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\MaintenanceSolution-Acc.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\Jobb-Acc.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\Schema-Acc.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does 
 				#						}
-				#						$Test 
+				#						'Test' 
 				#						{
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\MaintenanceSolution-Test.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\Jobb-Test.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
-				#							Invoke-Sqlcmd -InputFile \\sodra.com\media\kits\microsoft\sql\ScriptInstall\SQL\Schema-Test.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does 
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\MaintenanceSolution-Test.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\Jobb-Test.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does
+				#							Invoke-Sqlcmd -InputFile $rootInstallfolder\SQL\Schema-Test.sql -ServerInstance $server -Database $Drift # the parameter -database can be omitted based on what your sql script does 
 				#						}
 				#					}
 			}
