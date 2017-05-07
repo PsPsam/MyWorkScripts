@@ -2,11 +2,24 @@
 
 Function Test-WSManCredSSP
 # Enable double hop for Powershell (Is there a better way?)
+
+# Todo
+# Should add domain as imput parameter
 {
 	if ((Get-Item  -Path WSMan:\localhost\Client\Auth\CredSSP).value -eq $false) 
 	{
 		#enabla credspp
+<<<<<<< HEAD
 		Enable-WSManCredSSP -Role client -DelegateComputer *.Default.com
+=======
+        try {
+		    Enable-WSManCredSSP -Role client -DelegateComputer *.Default.com -Force
+        }
+        catch {
+            Write-Error -Message $_.Exception.Message
+            Throw 'Enable-WSManCredSSP unsuccessfull'
+        }
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
 	}
 	else
 	{
@@ -27,6 +40,7 @@ Function Test-WindowsFeature
 	if ($Action -eq 'Install') 
 	{
 		if ((Get-WindowsFeature -ComputerName $ComputerName -Name $Name -ErrorAction Ignore).installed) 
+<<<<<<< HEAD
 		{
 
 			Write-Verbose -Message "$ComputerName has $Name installed"
@@ -34,6 +48,15 @@ Function Test-WindowsFeature
 		}
 		else 
 		{
+=======
+		{
+
+			Write-Verbose -Message "$ComputerName has $Name installed"
+			Write-Output -InputObject "$ComputerName has feature $Name installed"
+		}
+		else 
+		{
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
 			Write-Verbose -Message "Installing $Name on $ComputerName"
 			try 
 			{

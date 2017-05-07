@@ -30,22 +30,33 @@
 #}
 
 # describes the function Test-WSManCredSSP
-Describe -Name 'Test-WSManCredSSP' -Fixture {
-	Context -Name 'Input' -Fixture {
-
+Describe -Name 'Test-WSManCredSSP' -Tag 'Test-WSManCredSSP'{
+	Context -Name 'Input'  {
+        
 	}
-	Context -Name 'Execution' -Fixture {
-
+	Context -Name 'Execution'  {
 	}
-	Context -Name 'Output' -Fixture {
+	Context -Name 'Output'  {
         it -Name 'WSMANCredSSP is enabled should outupt $true' -test {
             mock get-item {$true}
+            Test-WSManCredSSP | Should be $true
+        }
+        it -name 'Should return System.Xml.XmlElement if it enables wsmancredssp' {
+            mock get-item {$false}
+            mock Enable-WSManCredSSP {New-MockObject System.Xml.XmlElement}
+            Test-WSManCredSSP | Should be 'System.Xml.XmlElement'
+        }
+        
+        it -name 'failes to enable WSManCredSSP role client' -test {
+            mock get-item {$false}
+            mock Enable-WSManCredSSP { Throw }
+            Test-WSManCredSSP | Should be 'Enable-WSManCredSSP unsuccessfull'
         }
 	}
 }
 
 # Test if feature is or is not installed and take action 
-Describe -Name 'Test-WindowsFeature' -Fixture {
+Describe -Name 'Test-WindowsFeature' -Tag 'Test-WindowsFeature' {
 	$actionCase = @(
 		@{
 			action  = 'Install'
@@ -56,7 +67,7 @@ Describe -Name 'Test-WindowsFeature' -Fixture {
 			TestCase = 'Uninstall'
 		}
 	)
-	Context -Name 'Input' -Fixture {
+	Context -Name 'Input'  {
 		$parameterInfo = (Get-Command Test-WindowsFeature).Parameters['ComputerName']
 		It -name 'Parameter ComputerName Should be of type String' -test {
 			$parameterInfo.ParameterType.Name | Should Be 'String'
@@ -83,10 +94,17 @@ Describe -Name 'Test-WindowsFeature' -Fixture {
 		}
 	}
 
+<<<<<<< HEAD
 	Context -Name 'Execution' -Fixture {
 
 	}
 	Context -Name 'Output' -Fixture {
+=======
+	Context -Name 'Execution'  {
+
+	}
+	Context -Name 'Output'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         # Test when installing Windows feature       
 		It -name 'When installing a feature and its installed: ' -test {
             Mock Get-WindowsFeature { 
@@ -143,22 +161,36 @@ Describe -Name 'Test-WindowsFeature' -Fixture {
 	}
 }
 
+<<<<<<< HEAD
 Describe -Name 'Get-SQLBackupFolder' -Fixture {
     #Should use testcase
 	Context -Name 'Input' -Fixture {
+=======
+Describe -Name 'Get-SQLBackupFolder' -Tag 'Get-SQLBackupFolder' {
+    #Should use testcase
+	Context -Name 'Input'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It -name 'Only allow a singel computer' {}
         It -name 'Only allow the strings "Prod","Acc" and "Test" to be used for env' {}
         It -name 'Should be a string with the base backupfolder' {}
 	}
+<<<<<<< HEAD
 	Context -Name 'Execution' -Fixture {
         It -name 'Should add account to group Get-SQLBackupFolder' {}
 	}
 	Context -Name 'Output' -Fixture {
+=======
+	Context -Name 'Execution'  {
+        It -name 'Should add account to group Get-SQLBackupFolder' {}
+	}
+	Context -Name 'Output'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         it -name 'Should output the sql backupfolder for the server to use' {}
 	}
 }
 
 
+<<<<<<< HEAD
 Describe -Name 'Set-SQLGroup' -Fixture {
     # Testcase
 	Context -Name 'Input' -Fixture {
@@ -169,17 +201,38 @@ Describe -Name 'Set-SQLGroup' -Fixture {
         It -name 'Should add account to group Set-SQLGrop:' {}
 	}
 	Context -Name 'Output' -Fixture {
+=======
+Describe -Name 'Set-SQLGroup' -Tag 'Set-SQLGroup' {
+    # Testcase
+	Context -Name 'Input'  {
+        It -name 'Parameter ComputerName: Only allow a singel computer' {}
+        It -name 'Only allow the strings "Prod","Acc" and "Test" to be used for env' {}
+	}
+	Context -Name 'Execution'  {
+        It -name 'Should add account to group Set-SQLGrop:' {}
+	}
+	Context -Name 'Output'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         
 	}
 }
 
+<<<<<<< HEAD
 Describe -Name 'Set-SQLDisks' -Fixture {
 	Context -Name 'Input' -Fixture {
+=======
+Describe -Name 'Set-SQLDisks' -Tag 'Set-SQLDisks'{
+	Context -Name 'Input'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It -name 'Parameter ComputerName: Only allow a singel computer' {}
         It -name 'Parameter UserObj: Should Throw if not credential object' {}
         It -name 'Parameter UserObj: Only allow credential object' {}
 	}
+<<<<<<< HEAD
 	Context -Name 'Execution' -Fixture {
+=======
+	Context -Name 'Execution'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It -name 'Should create a cim session to the computer'
         It -name 'Should get disk through the cimsession that is online: Ends' {}
         # How to test a long chain of piping 
@@ -193,41 +246,61 @@ Describe -Name 'Set-SQLDisks' -Fixture {
         It 'Should throw if any error setting up disk on computer:' {}
         It 'Should remove cim session' {}
 	}
-	Context -Name 'Output' -Fixture {
+	Context -Name 'Output'  {
 
 	}
 }
 
+<<<<<<< HEAD
 Describe -Name 'Wait-SQLService' -Fixture {
 	Context -Name 'Input' -Fixture {
         It -name 'Parameter ComputerName: Only allow a singel computer' {}
 	}
 	Context -Name 'Execution' -Fixture {
+=======
+Describe -Name 'Wait-SQLService' -Tag 'Wait-SQLService'{
+	Context -Name 'Input'  {
+        It -name 'Parameter ComputerName: Only allow a singel computer' {}
+	}
+	Context -Name 'Execution'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It 'Should sleep for 5 seconds' {}
         It 'Should get status of sqlservice' {}
 	}
-	Context -Name 'Output' -Fixture {
+	Context -Name 'Output'  {
 
 	}
 }
 
+<<<<<<< HEAD
 Describe -Name 'Test-SQL' -Fixture {
 	Context -Name 'Input' -Fixture {
+=======
+Describe -Name 'Test-SQL' -Tag 'Test-SQ'{
+	Context -Name 'Input'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         $parameterInfo = (Get-Command Test-SQL).Parameters['Computername']
 		It -name 'Has ValidateSet for parameter Install-SQL for input Sql installationstyp' -test {
 			$parameterInfo.Attributes.Where{$_ -is [ValidateSet]}.Count | Should be 1
 		}
 	}
+<<<<<<< HEAD
 	Context -Name 'Execution' -Fixture {
         It 'Should execute get-service' {}
 	}
 	Context -Name 'Output' -Fixture {
+=======
+	Context -Name 'Execution'  {
+        It 'Should execute get-service' {}
+	}
+	Context -Name 'Output'  {
+>>>>>>> 43fcb585206335752969847b34fc85ed970162c3
         It 'Should return true if any sql services exists' {}
         It 'Should return false if no sql services is installed' {}
 	}
 }
 
-Describe -Name 'Install-SQL' -Fixture {
+Describe -Name 'Install-SQL' -Tag Install-SQL{
 	$envCase = @(
 		@{
 			env   = 'Test'
@@ -309,7 +382,7 @@ Describe -Name 'Install-SQL' -Fixture {
 		}
 	)
 
-	Context -Name 'Input' -Fixture {
+	Context -Name 'Input'  {
 		#Parameter testing
 		$parameterInfo = (Get-Command Install-SQL).Parameters['sql']
 		It -name 'Has ValidateSet for parameter Install-SQL for input Sql installationstyp' -test {
@@ -357,7 +430,7 @@ Describe -Name 'Install-SQL' -Fixture {
 		}
 
 	}
-	Context -Name 'Execution' -Fixture {
+	Context -Name 'Execution'  {
 		mock 'Test-Connection' {$true} 
 		mock 'Test-SQL' {$false}
 		Mock Test-WSManCredSSP {$true}
@@ -397,7 +470,7 @@ Describe -Name 'Install-SQL' -Fixture {
 		}
 	}
 	
-	Context -Name 'Output' -Fixture {
+	Context -Name 'Output'  {
 		
 		It 'Server allready have SQL Installed' {
 			mock 'Test-Connection' {$true}
